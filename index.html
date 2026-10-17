@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>AI Benchmark Dashboard</title>
+  <style>
+    :root {
+      --ink: #17231f;
+      --ink-soft: #53615a;
+      --muted: #78847c;
+      --line: #dce3d9;
+      --paper: #f5f7f1;
+      --surface: #ffffff;
+      --pine: #193f31;
+      --lime: #d8f36b;
+      --focus: #096fce;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; min-width: 320px; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    a { color: #216545; text-underline-offset: 3px; }
+    a:hover { color: #0d3b25; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 3px; }
+
+    .page { max-width: 1496px; margin: 0 auto; padding: 24px clamp(16px, 3vw, 46px) 42px; }
+    .topline { display: flex; align-items: center; gap: 9px; margin-bottom: 18px; color: #4a6253; font-size: 11px; font-weight: 800; letter-spacing: .17em; text-transform: uppercase; }
+    .topline-mark { width: 20px; height: 20px; border-radius: 6px; background: var(--pine); display: grid; place-items: center; color: var(--lime); font-size: 13px; letter-spacing: 0; }
+
+    .hero { position: relative; isolation: isolate; overflow: hidden; border-radius: 24px; background: #153b2d; color: #fff; padding: clamp(28px, 4.5vw, 58px); box-shadow: 0 20px 45px -34px #153b2d9c; }
+    .hero::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .32; background-image: radial-gradient(#b0d5a2 1px, transparent 1px); background-size: 24px 24px; mask-image: linear-gradient(90deg, transparent 35%, #000 100%); }
+    .hero::after { content: ""; position: absolute; width: min(57vw, 750px); aspect-ratio: 1; right: -18%; top: -105%; z-index: -1; border: 1px solid #8aae804d; border-radius: 50%; box-shadow: 0 0 0 94px #8aae8010, 0 0 0 188px #8aae800c, 0 0 0 282px #8aae8007; }
+    .hero-inner { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 30px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: #d9f2cd; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px #d8f36b25; }
+    h1 { margin: 16px 0 12px; max-width: 850px; font-size: clamp(38px, 5.2vw, 70px); line-height: .99; letter-spacing: -.057em; font-weight: 790; }
+    .hero-description { margin: 0; max-width: 620px; color: #d0e1d4; line-height: 1.55; font-size: clamp(14px, 1.4vw, 17px); }
+    .stamp { min-width: 230px; padding: 18px 22px; border: 1px solid #d8f36b6b; border-radius: 17px; background: #ecffc514; backdrop-filter: blur(4px); }
+    .stamp-label { display: block; color: #cce5ca; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .14em; margin-bottom: 7px; }
+    .stamp-value { display: block; color: var(--lime); font-size: clamp(21px, 2.25vw, 29px); font-weight: 780; letter-spacing: -.035em; white-space: nowrap; }
+    .hero-foot { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 38px; color: #cce0d0; font-size: 12px; }
+    .hero-foot span { display: inline-flex; align-items: center; gap: 7px; }
+    .hero-foot span::before { content: ""; width: 5px; height: 5px; background: var(--lime); border-radius: 50%; }
+
+    section { margin-top: 43px; }
+    .section-top { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin: 0 0 19px; }
+    .section-kicker { color: #4f7860; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; font-weight: 850; margin: 0 0 8px; }
+    h2 { font-size: clamp(26px, 3vw, 34px); line-height: 1.12; letter-spacing: -.045em; margin: 0; }
+    .section-subtitle { margin: 8px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.5; }
+    .section-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+    .hint { color: var(--ink-soft); font-size: 12px; }
+    .legend { display: inline-flex; gap: 7px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: #526258; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .legend-gradient { width: 82px; height: 9px; border-radius: 9px; background: linear-gradient(90deg, #f7c9c3, #fff0bf, #b8e8cd); }
+    .sync-button { border: 1px solid #b4c9b7; border-radius: 9px; background: #fff; padding: 9px 12px; color: var(--pine); font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+    .sync-button:hover { background: #eaf4e7; }
+    .sync-button[hidden] { display: none; }
+
+    .table-card { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 10px 32px -28px #193f314d; overflow: hidden; }
+    .table-scroll { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-color: #9eb7a6 #edf2ea; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
+    .benchmark-table { min-width: 1150px; }
+    .pricing-table { min-width: 900px; }
+    th, td { text-align: left; vertical-align: middle; border-bottom: 1px solid #e9eee6; }
+    th { background: #f3f7f1; padding: 0; color: #42594a; font-size: 12px; font-weight: 750; }
+    th:first-child, td:first-child { position: sticky; left: 0; z-index: 1; min-width: 205px; width: 215px; border-right: 1px solid #e7ede4; }
+    th:first-child { z-index: 3; }
+    td:first-child { background: #fff; }
+    tbody tr:hover td:first-child, tbody tr:hover td { background-color: #fafcf8; }
+    tbody tr:hover .heat-cell { background-color: var(--heat-bg); }
+    tbody tr:last-child td { border-bottom: 0; }
+    th:not(:first-child), td:not(:first-child) { min-width: 150px; }
+    .benchmark-table th:nth-child(3), .benchmark-table td:nth-child(3) { min-width: 176px; }
+    .pricing-table th:not(:first-child), .pricing-table td:not(:first-child) { min-width: 165px; }
+    .pricing-table th:last-child, .pricing-table td:last-child { min-width: 225px; }
+    .model-head { display: block; padding: 18px 18px; white-space: nowrap; }
+    .sort-button { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 60px; padding: 12px 14px; border: 0; background: transparent; color: inherit; font: inherit; line-height: 1.28; text-align: left; cursor: pointer; }
+    .sort-button:hover { color: #0c6134; background: #e9f2e6; }
+    .sort-button[aria-pressed="true"] { color: #0b6b3b; background: #e6f3e3; }
+    .sort-icon { display: inline-block; flex: 0 0 auto; color: #789282; font-size: 13px; line-height: 1; }
+    .sort-button[aria-pressed="true"] .sort-icon { color: #0b6b3b; }
+    .header-note { display: block; margin-top: 3px; color: #718376; font-size: 10px; font-weight: 600; }
+    .model-cell { padding: 16px 18px; }
+    .provider { color: #688074; font-size: 10px; font-weight: 800; letter-spacing: .10em; text-transform: uppercase; margin-bottom: 5px; }
+    .model-name { font-size: 14px; font-weight: 790; line-height: 1.3; color: #172921; }
+    .model-checked { color: #718076; font-size: 11px; line-height: 1.35; margin-top: 7px; }
+    .score-cell, .price-cell, .price-meta { padding: 12px 14px; }
+    .heat-cell { background: var(--heat-bg); color: var(--heat-fg); }
+    .cell-main { display: block; font-size: 17px; font-weight: 790; letter-spacing: -.025em; line-height: 1.2; white-space: nowrap; }
+    .cell-foot { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; margin-top: 6px; color: #536b5d; font-size: 11px; line-height: 1.3; }
+    .cell-foot a { font-weight: 730; white-space: nowrap; }
+    .cell-foot time { white-space: nowrap; }
+    .harness { display: inline-block; width: fit-content; margin-top: 6px; padding: 3px 6px; border: 1px solid #4d75513d; border-radius: 5px; background: #ffffff8c; color: #3a5d48; font-size: 10px; font-weight: 800; line-height: 1.15; text-transform: uppercase; letter-spacing: .04em; }
+    .missing { color: #8a9990; font-size: 19px; font-weight: 400; }
+    .price-meta time { display: block; color: #1e3629; font-size: 12px; font-weight: 770; margin-bottom: 6px; }
+    .price-meta a { display: block; width: fit-content; margin: 3px 0; color: #276a46; font-size: 11px; font-weight: 690; }
+    .tariff-note { display: block; max-width: 210px; margin-top: 7px; color: #62766a; font-size: 10px; line-height: 1.35; }
+    .empty-row td { position: static !important; background: #fff !important; border-right: 0 !important; padding: 50px 20px; text-align: center; color: var(--ink-soft); font-size: 14px; }
+    .empty-message { max-width: 530px; margin: 0 auto; line-height: 1.45; }
+    .empty-title { display: block; color: var(--ink); font-weight: 780; font-size: 16px; margin-bottom: 4px; }
+    .table-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 11px 17px; border-top: 1px solid var(--line); background: #fbfcfa; color: #718076; font-size: 11px; }
+    .table-bottom strong { color: #385446; }
+
+    .price-note, .method-note { margin: 14px 2px 0; max-width: 1100px; color: #53615a; font-size: 13px; line-height: 1.55; }
+    .update-card { margin-top: 39px; border: 1px solid #cdddcf; border-radius: 16px; background: #eaf3e8; padding: 20px 24px; display: flex; align-items: flex-start; gap: 16px; }
+    .update-icon { flex: 0 0 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: var(--pine); color: var(--lime); font-size: 20px; font-weight: 600; }
+    .update-card h2 { font-size: 17px; letter-spacing: -.02em; margin: 0 0 5px; }
+    .update-card p { margin: 0; color: #456351; font-size: 13px; line-height: 1.5; }
+    footer { padding: 22px 1px 0; color: #819087; font-size: 11px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    @media (max-width: 750px) {
+      .page { padding-top: 15px; }
+      .hero { border-radius: 18px; }
+      .stamp { width: 100%; max-width: 290px; }
+      .hero-foot { margin-top: 27px; }
+      section { margin-top: 34px; }
+      .section-top { align-items: flex-start; }
+      .hint { font-size: 11px; }
+      .table-card { border-radius: 12px; }
+      th:first-child, td:first-child { min-width: 173px; width: 173px; }
+      .model-cell { padding: 14px 12px; }
+      .model-head { padding: 16px 12px; }
+      .update-card { padding: 16px; }
+      .empty-row td { padding: 34px 16px; text-align: left; }
+      .empty-message { width: calc(100vw - 64px); max-width: none; margin: 0; }
+    }
+    /* Compact, fixed dark layout. Tables use the available width; narrow screens become cards. */
+    :root {
+      --ink: #e7f0e9; --ink-soft: #abbcb3; --muted: #899d91; --line: #34453c;
+      --paper: #0c1511; --surface: #15221b; --pine: #1c3829; --lime: #b9ec96; --focus: #72b5ff;
+    }
+    a { color: #a9d9ac; }
+    a:hover { color: #d5f1bd; }
+    .page { max-width: 1600px; padding: 8px 12px 24px; }
+    .topline { margin-bottom: 6px; color: #a3b9a8; font-size: 9px; letter-spacing: .12em; }
+    .topline-mark { width: 14px; height: 14px; border-radius: 4px; font-size: 10px; }
+    .hero { border: 1px solid #43604a; border-radius: 10px; padding: 9px 14px; background: #163325; box-shadow: none; }
+    .hero::before, .hero::after { display: none; }
+    .hero-inner { align-items: center; flex-wrap: nowrap; gap: 16px; }
+    .eyebrow { color: #a3d99d; font-size: 8px; letter-spacing: .1em; }
+    .eyebrow::before { width: 4px; height: 4px; box-shadow: none; }
+    h1 { margin: 2px 0; max-width: none; font-size: 25px; line-height: 1.04; letter-spacing: -.045em; }
+    h1 br { display: none; }
+    .hero-description { max-width: none; font-size: 10px; line-height: 1.2; color: #b7cbb9; }
+    .stamp { min-width: 150px; width: auto; margin-left: auto; padding: 6px 10px; border-radius: 7px; background: #294632; }
+    .stamp-label { margin-bottom: 2px; font-size: 8px; color: #c1d9bd; letter-spacing: .08em; }
+    .stamp-value { font-size: 16px; line-height: 1.15; }
+    .hero-foot { display: none; }
+
+    section { margin-top: 11px; }
+    .section-top { align-items: end; gap: 8px; margin-bottom: 5px; }
+    .section-kicker { margin: 0 0 2px; color: #9dcaa0; font-size: 8px; letter-spacing: .11em; }
+    h2 { font-size: 18px; line-height: 1.08; }
+    .section-subtitle { margin: 2px 0 0; font-size: 9px; line-height: 1.18; }
+    .section-tools { gap: 4px; }
+    .hint { display: none; }
+    .legend { gap: 4px; padding: 4px 6px; border-radius: 5px; background: #1b3022; color: #b8cbb9; font-size: 8px; }
+    .legend-gradient { width: 42px; height: 6px; background: linear-gradient(90deg, #6b343a, #5c5332, #2b7149); }
+    .sync-button { padding: 5px 8px; border-color: #52735c; border-radius: 5px; background: #203a29; color: #d0edc1; font-size: 9px; }
+    .sync-button:hover { background: #34593c; }
+
+    .table-card { border-color: var(--line); border-radius: 8px; box-shadow: none; }
+    .table-scroll { overflow: visible; }
+    table { width: 100%; table-layout: fixed; }
+    .benchmark-table, .pricing-table { min-width: 0; }
+    th, td { border-color: #2b3e32; }
+    th { background: #1d3023; color: #cadccc; font-size: 11px; }
+    th:first-child, td:first-child { position: static; min-width: 0; width: auto; border-color: #34503b; }
+    .benchmark-table th:first-child, .benchmark-table td:first-child { width: 17%; }
+    .pricing-table th:first-child, .pricing-table td:first-child { width: 18%; }
+    .pricing-table th:last-child, .pricing-table td:last-child { width: 31%; }
+    th:not(:first-child), td:not(:first-child), .benchmark-table th:nth-child(3), .benchmark-table td:nth-child(3), .pricing-table th:not(:first-child), .pricing-table td:not(:first-child), .pricing-table th:last-child, .pricing-table td:last-child { min-width: 0; }
+    td:first-child { background: #17271c; }
+    tbody tr:hover td:first-child, tbody tr:hover td { background-color: #243c2b; }
+    tbody tr:hover .heat-cell { background-color: var(--heat-bg); }
+    tbody tr { height: 42px; }
+    .model-head { padding: 5px 6px; white-space: normal; }
+    .sort-button { gap: 2px; min-height: 36px; padding: 3px 5px; color: #cbdccd; font-size: 11px; line-height: 1.1; }
+    .sort-button:hover { background: #2b4932; color: #e9f7e3; }
+    .sort-button[aria-pressed="true"] { background: #31523a; color: #d6f5c8; }
+    .sort-icon, .sort-button[aria-pressed="true"] .sort-icon { color: #a8cbaa; font-size: 10px; }
+    .header-note { margin-top: 1px; color: #94ad98; font-size: 8px; line-height: 1.1; }
+    .model-cell { padding: 2px 6px; overflow: hidden; }
+    .provider { margin-bottom: 1px; color: #a6c4a9; font-size: 7.5px; line-height: 1; letter-spacing: .07em; }
+    .model-name { color: #f0f5ef; font-size: 13px; line-height: 1.08; white-space: normal; }
+    .model-checked { margin-top: 2px; color: #a4b7a8; font-size: 8.5px; line-height: 1; white-space: nowrap; }
+    .score-cell, .price-cell, .price-meta { padding: 2px 5px; overflow: visible; }
+    .heat-cell { background: var(--heat-bg); color: var(--heat-fg); box-shadow: inset 2px 0 var(--heat-edge); }
+    .value-line { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
+    .cell-main { font-size: 16px; line-height: 1.05; white-space: nowrap; }
+    .source-link { flex: 0 0 auto; margin-left: auto; color: #b1cab2; font-size: 7.5px; font-weight: 550; line-height: 1.1; text-decoration: none; white-space: nowrap; }
+    .source-link:hover { color: #e2f7d6; text-decoration: underline; }
+    .cell-date { display: block; margin-top: 1px; color: #b4c9b8; font-size: 8.5px; line-height: 1.05; white-space: nowrap; }
+    .harness { display: block; width: auto; max-width: 100%; margin-top: 1px; padding: 0; border: 0; border-radius: 0; background: transparent; color: #c4d5c5; font-size: 8.5px; font-weight: 550; line-height: 1.08; text-transform: none; letter-spacing: 0; white-space: normal; overflow-wrap: anywhere; }
+    .missing { color: #8da494; font-size: 14px; }
+    .meta-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .price-meta time { display: inline; color: #d4e7d5; font-size: 8.5px; font-weight: 700; margin: 0; }
+    .price-meta a { display: inline; margin: 0; color: #b1cab2; font-size: 7.5px; font-weight: 550; text-decoration: none; }
+    .price-meta a:hover { color: #e2f7d6; text-decoration: underline; }
+    .tariff-note { display: block; max-width: none; margin-top: 3px; color: #afc2ae; font-size: 8px; line-height: 1.1; white-space: normal; overflow-wrap: anywhere; }
+    .empty-row td { background: var(--surface) !important; padding: 20px; font-size: 11px; }
+    .empty-title { color: var(--ink); font-size: 13px; }
+    .table-bottom { gap: 4px; padding: 3px 7px; border-color: var(--line); background: #17251b; color: #a5baa6; font-size: 8px; line-height: 1.2; }
+    .table-bottom strong { color: #c7e8c1; }
+
+    .price-note, .method-note { max-width: none; margin: 5px 1px 0; color: #b2c5b5; font-size: 9px; line-height: 1.28; }
+    .update-card { align-items: center; gap: 8px; margin-top: 8px; padding: 6px 9px; border-color: #3a5a40; border-radius: 8px; background: #1a3021; }
+    .update-icon { flex-basis: 20px; height: 20px; border-radius: 5px; font-size: 13px; }
+    .update-card h2 { margin: 0 0 2px; font-size: 11px; }
+    .update-card p { color: #bdcfbd; font-size: 9px; line-height: 1.2; }
+    footer { padding: 7px 1px 0; color: #879e8c; font-size: 8px; }
+
+    @media (max-width: 950px) {
+      .page { padding: 10px 10px 20px; }
+      .hero { padding: 11px 12px; }
+      .hero-inner { flex-wrap: wrap; gap: 8px; }
+      h1 { font-size: 23px; }
+      .stamp { margin-left: 0; padding: 5px 8px; }
+      .stamp-value { font-size: 14px; }
+      .section-top { align-items: flex-start; }
+      .section-tools { margin-left: auto; }
+      .table-card { overflow: visible; border: 0; background: transparent; }
+      .table-scroll { overflow: visible; }
+      table, thead, tbody { display: block; width: 100%; }
+      thead tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin-bottom: 6px; }
+      thead th:first-child { display: none; }
+      thead th { display: block; width: auto !important; min-width: 0; border: 1px solid var(--line); border-radius: 5px; }
+      .sort-button { min-height: 32px; padding: 4px 6px; font-size: 10px; }
+      tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); height: auto; margin-bottom: 7px; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--surface); }
+      tbody td, .benchmark-table td:first-child, .pricing-table td:first-child, .pricing-table td:last-child { display: block; width: auto; min-width: 0; }
+      tbody td:first-child { grid-column: 1 / -1; border: 0; border-bottom: 1px solid var(--line); }
+      .model-cell { padding: 7px 9px; }
+      .model-name { font-size: 14px; white-space: normal; }
+      .provider, .model-checked { font-size: 9px; }
+      .score-cell, .price-cell, .price-meta { min-height: 71px; margin: 3px; padding: 6px; border: 1px solid #3b5142; border-radius: 5px; }
+      .score-cell::before, .price-cell::before, .price-meta::before { content: attr(data-label); display: block; margin-bottom: 4px; color: #d0e2d0; font-size: 9px; font-weight: 750; line-height: 1.1; }
+      .cell-main { font-size: 16px; }
+      .source-link { font-size: 8px; }
+      .cell-date { margin-top: 3px; font-size: 9px; }
+      .harness { margin-top: 3px; font-size: 9px; white-space: normal; }
+      .pricing-table tbody .price-cell:nth-child(4) { grid-column: 1 / -1; min-height: 0; }
+      .price-meta { grid-column: 1 / -1; min-height: 0; }
+      .price-meta time, .price-meta a, .tariff-note { font-size: 9px; }
+      .tariff-note { white-space: normal; }
+      .table-bottom { padding: 5px 7px; border: 1px solid var(--line); border-radius: 5px; }
+      .method-note, .price-note { font-size: 10px; line-height: 1.4; }
+      .update-card { align-items: flex-start; }
+      .empty-row td { grid-column: 1 / -1; width: 100% !important; }
+    }
+    @media (max-width: 380px) {
+      .section-tools { width: 100%; margin-left: 0; }
+      .score-cell, .price-cell { min-height: 78px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topline"><span class="topline-mark" aria-hidden="true">✳</span> Reference desk / model snapshot</div>
+
+    <header class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="eyebrow">Published results, manually checked</div>
+          <h1>AI Benchmark<br>Dashboard</h1>
+          <p class="hero-description">Compare frontier model scores and provider list prices in one source-linked snapshot.</p>
+        </div>
+        <div class="stamp" aria-label="Snapshot last updated">
+          <span class="stamp-label">Last updated</span>
+          <time class="stamp-value" id="last-updated">—</time>
+        </div>
+      </div>
+      <div class="hero-foot"><span id="model-count">Models pending</span><span>6 benchmarks</span><span>Manual snapshot</span></div>
+    </header>
+
+    <section aria-labelledby="benchmarks-title">
+      <div class="section-top">
+        <div>
+          <p class="section-kicker">01 / Performance</p>
+          <h2 id="benchmarks-title">Benchmarks</h2>
+          <p class="section-subtitle">Select a benchmark to sort. Higher scores rank first; missing results stay at the bottom.</p>
+        </div>
+        <div class="section-tools"><div class="legend" aria-label="Cell colors from lower to higher scores"><span>Lower</span><span class="legend-gradient" aria-hidden="true"></span><span>Higher</span></div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-scroll" role="region" aria-label="Benchmark results table">
+          <table class="benchmark-table">
+            <caption class="sr-only">Published scores by model. Each published score includes its source and date seen.</caption>
+            <thead><tr>
+              <th scope="col"><span class="model-head">Model <span class="header-note">Score check date</span></span></th>
+              <th scope="col"><button class="sort-button" type="button" data-group="benchmark" data-key="deepSWE" aria-pressed="false"><span>DeepSWE v1.1</span><span class="sort-icon" aria-hidden="true">↕</span></button></th>
+              <th scope="col"><button class="sort-button" type="button" data-group="benchmark" data-key="swePro" aria-pressed="false"><span>SWE-bench Pro<span class="header-note">Harness labeled per score</span></span><span class="sort-icon" aria-hidden="true">↕</span></button></th>
+              <th scope="col"><button class="sort-button" type="button" data-group="benchmark" data-key="terminal" aria-pressed="false"><span>Terminal-Bench 4.0</span><span class="sort-icon" aria-hidden="true">↕</span></button></th>
+              <th scope="col"><button class="sort-button" type="button" data-group="benchmark" data-key="hle" aria-pressed="false"><span>Humanity's Last Exam</span><span class="sort-icon" aria-hidden="true">↕</span></button></th>
+              <th scope="col"><button class="sort-button" type="button" data-group="benchmark" data-key="arc" aria-pressed="false"><span>ARC-AGI-3</span><span class="sort-icon" aria-hidden="true">↕</span></button></th>
+              <th scope="col"><button class="sort-button" type="button" data-group="benchmark" data-key="arena" aria-pressed="false"><span>LMArena Elo</span><span class="sort-icon" aria-hidden="true">↕</span></button></th>
+            </tr></thead>
+            <tbody id="benchmark-body"></tbody>
+          </table>
+        </div>
+        <div class="table-bottom"><span>Color scale compares published values within each column.</span><strong id="benchmark-sort-label">Original model order</strong></div>
+      </div>
+      <p class="method-note">SWE-bench Pro uses the public V1 standardized board; its mini-swe-agent harness is labeled in the score cell. Vendor-reported and standardized results can differ sharply (about 90% versus 62% in the example supplied for this dashboard), so those figures are never combined. ARC-AGI-3 uses its Standard harness, and LMArena scores are Text Overall ratings.</p>
+    </section>
+
+    <section aria-labelledby="pricing-title">
+      <div class="section-top">
+        <div>
+          <p class="section-kicker">02 / Cost</p>
+          <h2 id="pricing-title">Pricing</h2>
+          <p class="section-subtitle">Provider list tariffs per million tokens. Price sorting starts with the lowest value.</p>
+        </div>
+        <div class="section-tools"><button id="sync-pricing" class="sync-button" type="button" hidden>Match benchmark order</button></div>
+      </div>
+      <div class="table-card">
+        <div class="table-scroll" role="region" aria-label="Model pricing table">
+          <table class="pricing-table">
+            <caption class="sr-only">Published provider list prices and context windows by model. Price cells and row details include their source and date seen.</caption>
+            <thead><tr>
+              <th scope="col"><span class="model-head">Model</span></th>
+              <th scope="col"><button class="sort-button" type="button" data-group="pricing" data-key="input" aria-pressed="false"><span>Input $ / 1M tokens</span><span class="sort-icon" aria-hidden="true">↕</span></button></th>
+              <th scope="col"><button class="sort-button" type="button" data-group="pricing" data-key="output" aria-pressed="false"><span>Output $ / 1M tokens</span><span class="sort-icon" aria-hidden="true">↕</span></button></th>
+              <th scope="col"><button class="sort-button" type="button" data-group="pricing" data-key="context" aria-pressed="false"><span>Context window</span><span class="sort-icon" aria-hidden="true">↕</span></button></th>
+              <th scope="col"><button class="sort-button" type="button" data-group="pricing" data-key="checked" aria-pressed="false"><span>Price last checked<span class="header-note">Provider source + cross-check</span></span><span class="sort-icon" aria-hidden="true">↕</span></button></th>
+            </tr></thead>
+            <tbody id="pricing-body"></tbody>
+          </table>
+        </div>
+        <div class="table-bottom"><span>“—” means no source-backed figure is in this snapshot.</span><strong id="pricing-sort-label">Matches benchmark order</strong></div>
+      </div>
+      <p class="price-note">List prices only. Your actual bill = price x tokens used. Effort / verbosity settings change how many tokens a model uses, so two models with the same list price can cost very different amounts.</p>
+    </section>
+
+    <aside class="update-card" aria-labelledby="update-title">
+      <span class="update-icon" aria-hidden="true">↻</span>
+      <div><h2 id="update-title">How to update</h2><p>Paste new scores / prices into the snapshot data in this file, update the Last updated date, and keep old source links. No automatic fetching.</p></div>
+    </aside>
+    <footer>Static reference snapshot · Verify source dates before relying on a figure.</footer>
+  </main>
+
+  <script>
+    // MANUAL SNAPSHOT DATA. Paste verified published figures here; never fetch at runtime.
+    // A score needs: { value: number, display: string, source: URL, seen: 'YYYY-MM-DD' }.
+    // SWE-bench Pro scores require `harness`; other scores may label their evaluation setup too.
+    // A missing score is null. Do not enter a value unless the leaderboard publishes it.
+    // Pricing needs: { input: number|null, output: number|null, context: number|null,
+    //   checked: 'YYYY-MM-DD', source: provider pricing URL, crossCheck: AA URL,
+    //   contextSource?: provider documentation URL, tierNote?: published tariff tier }.
+    // Use null for unpublished figures.
+    const SNAPSHOT = {
+  "updated": "2026-10-17",
+  "models": [
+    {
+      "name": "Gemini 4 Argon",
+      "provider": "Google",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": null,
+        "swePro": null,
+        "terminal": null,
+        "hle": null,
+        "arc": {
+          "value": 49.79401633943577,
+          "display": "49.8%",
+          "source": "https://arcprize.org/media/data/leaderboard/v3.json",
+          "seen": "2026-10-17",
+          "harness": "Standard · low"
+        },
+        "arena": {
+          "value": 1524,
+          "display": "1524",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall · high · preliminary"
+        }
+      },
+      "pricing": {
+        "input": 2,
+        "output": 10,
+        "context": 1048576,
+        "checked": "2026-10-17",
+        "source": "https://ai.google.dev/gemini-api/docs/pricing",
+        "contextSource": "https://ai.google.dev/gemini-api/docs/models/gemini-4-argon",
+        "crossCheck": "https://artificialanalysis.ai/models/gemini-4-argon",
+        "tierNote": "Paid Standard tariff through Nov 30, 2026; $4/$20 per 1M from Dec 1."
+      }
+    },
+    {
+      "name": "Claude Opus 5.5",
+      "provider": "Anthropic",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": null,
+        "swePro": null,
+        "terminal": {
+          "value": 64.85,
+          "display": "64.85%",
+          "source": "https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/latest/leaderboards/4-0-0/rows/7b805dbb-e77a-4d0a-892e-165f922f786c",
+          "seen": "2026-10-17",
+          "harness": "Claude Code · max"
+        },
+        "hle": null,
+        "arc": null,
+        "arena": {
+          "value": 1508,
+          "display": "1508",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall · high"
+        }
+      },
+      "pricing": {
+        "input": 4,
+        "output": 20,
+        "context": 1000000,
+        "checked": "2026-10-17",
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "contextSource": "https://platform.claude.com/docs/en/models/opus-5-5/overview",
+        "crossCheck": "https://artificialanalysis.ai/models/claude-opus-5-5",
+        "tierNote": "Paid Standard API tariff; caching and batch rates are separate."
+      }
+    },
+    {
+      "name": "Claude Fable 5.1",
+      "provider": "Anthropic",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": null,
+        "swePro": null,
+        "terminal": {
+          "value": 57.88,
+          "display": "57.88%",
+          "source": "https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/latest/leaderboards/4-0-0/rows/c741608e-c94e-417d-b7a8-e67111a0c887",
+          "seen": "2026-10-17",
+          "harness": "Claude Code · max"
+        },
+        "hle": {
+          "value": 46.5,
+          "display": "46.50%",
+          "source": "https://labs.scale.com/leaderboard/humanitys_last_exam",
+          "seen": "2026-10-17",
+          "harness": "Original HLE · xhigh"
+        },
+        "arc": null,
+        "arena": {
+          "value": 1502,
+          "display": "1502",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall · max"
+        }
+      },
+      "pricing": {
+        "input": 10,
+        "output": 50,
+        "context": 1000000,
+        "checked": "2026-10-17",
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "contextSource": "https://platform.claude.com/docs/en/models/fable-5-1/overview",
+        "crossCheck": "https://artificialanalysis.ai/models/claude-fable-5-1",
+        "tierNote": "Paid Standard API tariff; caching and batch rates are separate."
+      }
+    },
+    {
+      "name": "Gemini 3.8 Flash",
+      "provider": "Google",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": {
+          "value": 74,
+          "display": "74%",
+          "source": "https://deepswe.datacurve.ai/",
+          "seen": "2026-10-17",
+          "harness": "mini-swe-agent · high"
+        },
+        "swePro": null,
+        "terminal": {
+          "value": 19.09,
+          "display": "19.09%",
+          "source": "https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/latest/leaderboards/4-0-0/rows/06850434-507d-4dbd-b74a-09d52519ee35",
+          "seen": "2026-10-17",
+          "harness": "mini-SWE-agent · high"
+        },
+        "hle": {
+          "value": 44.52,
+          "display": "44.52%",
+          "source": "https://labs.scale.com/leaderboard/humanitys_last_exam",
+          "seen": "2026-10-17",
+          "harness": "Original HLE"
+        },
+        "arc": {
+          "value": 10.36627922392312,
+          "display": "10.4%",
+          "source": "https://arcprize.org/media/data/leaderboard/v3.json",
+          "seen": "2026-10-17",
+          "harness": "Standard · high"
+        },
+        "arena": {
+          "value": 1496,
+          "display": "1496",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall · high · preliminary"
+        }
+      },
+      "pricing": {
+        "input": 0.75,
+        "output": 3.75,
+        "context": 1048576,
+        "checked": "2026-10-17",
+        "source": "https://ai.google.dev/gemini-api/docs/pricing",
+        "contextSource": "https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash",
+        "crossCheck": "https://artificialanalysis.ai/models/gemini-3-8-flash",
+        "tierNote": "Paid Standard tariff through Dec 31, 2026; $1.50/$7.50 per 1M from Jan 1."
+      }
+    },
+    {
+      "name": "Kimi K3",
+      "provider": "Moonshot",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": {
+          "value": 69,
+          "display": "69%",
+          "source": "https://deepswe.datacurve.ai/",
+          "seen": "2026-10-17",
+          "harness": "mini-swe-agent · max"
+        },
+        "swePro": null,
+        "terminal": null,
+        "hle": null,
+        "arc": null,
+        "arena": {
+          "value": 1487,
+          "display": "1487",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall · max"
+        }
+      },
+      "pricing": {
+        "input": 3.0,
+        "output": 15.0,
+        "context": 1048576,
+        "checked": "2026-10-17",
+        "source": "https://platform.kimi.ai/docs/pricing/chat",
+        "contextSource": "https://platform.kimi.ai/docs/pricing/chat",
+        "crossCheck": "https://artificialanalysis.ai/models/kimi-k3",
+        "tierNote": "Standard uncached tariff; cached input and cache writes cost differently."
+      }
+    },
+    {
+      "name": "GPT-6.1 Sol",
+      "provider": "OpenAI",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": null,
+        "swePro": null,
+        "terminal": {
+          "value": 58.18,
+          "display": "58.18%",
+          "source": "https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/latest/leaderboards/4-0-0/rows/79aafc20-6776-4411-a5a5-0640562496d0",
+          "seen": "2026-10-17",
+          "harness": "Codex · max"
+        },
+        "hle": null,
+        "arc": {
+          "value": 52.72904006820879,
+          "display": "52.7%",
+          "source": "https://arcprize.org/media/data/leaderboard/v3.json",
+          "seen": "2026-10-17",
+          "harness": "Standard · max"
+        },
+        "arena": {
+          "value": 1484,
+          "display": "1484",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall · max"
+        }
+      },
+      "pricing": {
+        "input": 2,
+        "output": 10,
+        "context": 1050000,
+        "checked": "2026-10-17",
+        "source": "https://developers.openai.com/api/docs/pricing",
+        "contextSource": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+        "crossCheck": "https://artificialanalysis.ai/models/gpt-6-1-sol",
+        "tierNote": "Standard tariff for ≤272K input tokens; above that, the whole request costs $4/$15 per 1M."
+      }
+    },
+    {
+      "name": "Qwen3.8 Max (0902)",
+      "provider": "Qwen / Alibaba",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": {
+          "value": 57,
+          "display": "57%",
+          "source": "https://deepswe.datacurve.ai/",
+          "seen": "2026-10-17",
+          "harness": "mini-swe-agent · xhigh"
+        },
+        "swePro": null,
+        "terminal": {
+          "value": 26.97,
+          "display": "26.97%",
+          "source": "https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/latest/leaderboards/4-0-0/rows/1f7ed2b4-3a4e-41d9-a1e1-0d9dcdc3667a",
+          "seen": "2026-10-17",
+          "harness": "Claude Code · max"
+        },
+        "hle": null,
+        "arc": null,
+        "arena": {
+          "value": 1482,
+          "display": "1482",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall"
+        }
+      },
+      "pricing": {
+        "input": 2.0,
+        "output": 6.0,
+        "context": 1000000,
+        "checked": "2026-10-17",
+        "source": "https://www.alibabacloud.com/help/en/model-studio/model-pricing",
+        "contextSource": "https://help.aliyun.com/zh/model-studio/text-generation-model",
+        "crossCheck": "https://artificialanalysis.ai/models/qwen3-8-max",
+        "tierNote": "Singapore International, standard uncached tariff."
+      }
+    },
+    {
+      "name": "GPT-6 Astra",
+      "provider": "OpenAI",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": {
+          "value": 74,
+          "display": "74%",
+          "source": "https://deepswe.datacurve.ai/",
+          "seen": "2026-10-17",
+          "harness": "mini-swe-agent · xhigh"
+        },
+        "swePro": null,
+        "terminal": {
+          "value": 58.18,
+          "display": "58.18%",
+          "source": "https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/latest/leaderboards/4-0-0/rows/5c537be4-7fc3-449b-8bfc-ceb9061c2535",
+          "seen": "2026-10-17",
+          "harness": "Codex · max"
+        },
+        "hle": {
+          "value": 54.8,
+          "display": "54.80%",
+          "source": "https://labs.scale.com/leaderboard/humanitys_last_exam",
+          "seen": "2026-10-17",
+          "harness": "Original HLE"
+        },
+        "arc": {
+          "value": 62.71280210060628,
+          "display": "62.7%",
+          "source": "https://arcprize.org/media/data/leaderboard/v3.json",
+          "seen": "2026-10-17",
+          "harness": "Standard · max"
+        },
+        "arena": {
+          "value": 1477,
+          "display": "1477",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall · max"
+        }
+      },
+      "pricing": {
+        "input": 10,
+        "output": 50,
+        "context": 1050000,
+        "checked": "2026-10-17",
+        "source": "https://developers.openai.com/api/docs/pricing",
+        "contextSource": "https://developers.openai.com/api/docs/models/gpt-6-astra",
+        "crossCheck": "https://artificialanalysis.ai/models/gpt-6-astra",
+        "tierNote": "Standard tariff for ≤272K input tokens; above that, the whole request costs $20/$75 per 1M."
+      }
+    },
+    {
+      "name": "Claude Sonnet 5.5",
+      "provider": "Anthropic",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": null,
+        "swePro": null,
+        "terminal": {
+          "value": 61.82,
+          "display": "61.82%",
+          "source": "https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/latest/leaderboards/4-0-0/rows/723c6609-fe18-46d9-a1a3-dd4b6b0e0d00",
+          "seen": "2026-10-17",
+          "harness": "Claude Code · max"
+        },
+        "hle": {
+          "value": 46.12,
+          "display": "46.12%",
+          "source": "https://labs.scale.com/leaderboard/humanitys_last_exam",
+          "seen": "2026-10-17",
+          "harness": "Original HLE · xhigh"
+        },
+        "arc": null,
+        "arena": {
+          "value": 1475,
+          "display": "1475",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall · xhigh"
+        }
+      },
+      "pricing": {
+        "input": 2,
+        "output": 10,
+        "context": 1000000,
+        "checked": "2026-10-17",
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "contextSource": "https://platform.claude.com/docs/en/models/sonnet-5-5/overview",
+        "crossCheck": "https://artificialanalysis.ai/models/claude-sonnet-5-5",
+        "tierNote": "Paid Standard API tariff; caching and batch rates are separate."
+      }
+    },
+    {
+      "name": "GPT-5.4",
+      "provider": "OpenAI",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": null,
+        "swePro": {
+          "value": 59.1,
+          "display": "59.1%",
+          "source": "https://labs.scale.com/leaderboard/swe_bench_pro",
+          "seen": "2026-10-17",
+          "harness": "mini-swe-agent · public V1"
+        },
+        "terminal": null,
+        "hle": {
+          "value": 36.24,
+          "display": "36.24%",
+          "source": "https://labs.scale.com/leaderboard/humanitys_last_exam",
+          "seen": "2026-10-17",
+          "harness": "Original HLE · xhigh"
+        },
+        "arc": {
+          "value": 0.21,
+          "display": "0.2%",
+          "source": "https://arcprize.org/media/data/leaderboard/v3.json",
+          "seen": "2026-10-17",
+          "harness": "Standard · high"
+        },
+        "arena": {
+          "value": 1475,
+          "display": "1475",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall · high"
+        }
+      },
+      "pricing": {
+        "input": 2.5,
+        "output": 15,
+        "context": 1050000,
+        "checked": "2026-10-17",
+        "source": "https://developers.openai.com/api/docs/pricing",
+        "contextSource": "https://developers.openai.com/api/docs/models/gpt-5.4",
+        "crossCheck": "https://artificialanalysis.ai/models/gpt-5-4",
+        "tierNote": "Standard tariff for ≤272K input tokens; above that, the whole request costs $5/$22.50 per 1M."
+      }
+    },
+    {
+      "name": "DeepSeek V4 Pro (0813)",
+      "provider": "DeepSeek",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": {
+          "value": 63,
+          "display": "63%",
+          "source": "https://deepswe.datacurve.ai/",
+          "seen": "2026-10-17",
+          "harness": "mini-swe-agent · max"
+        },
+        "swePro": null,
+        "terminal": null,
+        "hle": null,
+        "arc": null,
+        "arena": {
+          "value": 1465,
+          "display": "1465",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall · high · 0813"
+        }
+      },
+      "pricing": {
+        "input": 1.32,
+        "output": 3.96,
+        "context": 1000000,
+        "checked": "2026-10-17",
+        "source": "https://api-docs.deepseek.com/quick_start/pricing/",
+        "contextSource": "https://api-docs.deepseek.com/quick_start/pricing/",
+        "crossCheck": "https://artificialanalysis.ai/models/deepseek-v4-pro",
+        "tierNote": "Peak cache-miss tariff; off-peak is $0.66/$1.98 per 1M."
+      }
+    },
+    {
+      "name": "Grok 4.7",
+      "provider": "xAI",
+      "scoresChecked": "2026-10-17",
+      "scores": {
+        "deepSWE": null,
+        "swePro": null,
+        "terminal": {
+          "value": 37.58,
+          "display": "37.58%",
+          "source": "https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/latest/leaderboards/4-0-0/rows/84b39f56-fe3c-46c3-919f-3b67b73f9b49",
+          "seen": "2026-10-17",
+          "harness": "Grok Build · xhigh"
+        },
+        "hle": null,
+        "arc": {
+          "value": 1.8162526536637038,
+          "display": "1.8%",
+          "source": "https://arcprize.org/media/data/leaderboard/v3.json",
+          "seen": "2026-10-17",
+          "harness": "Standard · xhigh"
+        },
+        "arena": {
+          "value": 1444,
+          "display": "1444",
+          "source": "https://arena.ai/leaderboard/chat/text",
+          "seen": "2026-10-17",
+          "harness": "Text Overall · xhigh"
+        }
+      },
+      "pricing": {
+        "input": 2.0,
+        "output": 6.0,
+        "context": 500000,
+        "checked": "2026-10-17",
+        "source": "https://docs.x.ai/developers/pricing",
+        "contextSource": "https://docs.x.ai/developers/models",
+        "crossCheck": "https://artificialanalysis.ai/models/grok-4-7",
+        "tierNote": "Global API, <200K prompt tokens; ≥200K costs $4/$12 per 1M for the whole request."
+      }
+    }
+  ]
+};
+    // Paste records into models: [ ... ] using this shape (include only models with 2+ sourced scores):
+    // { name: "", provider: "", scoresChecked: "YYYY-MM-DD",
+    //   scores: { deepSWE: null, swePro: null, terminal: null, hle: null, arc: null, arena: null },
+    //   pricing: { input: null, output: null, context: null, checked: "YYYY-MM-DD",
+    //     source: "", crossCheck: "" } }
+
+    const benchmarkKeys = ["deepSWE", "swePro", "terminal", "hle", "arc", "arena"];
+    const benchmarkNames = {
+      deepSWE: "DeepSWE v1.1", swePro: "SWE-bench Pro", terminal: "Terminal-Bench 4.0",
+      hle: "Humanity's Last Exam", arc: "ARC-AGI-3", arena: "LMArena Elo"
+    };
+    const pricingNames = { input: "input price", output: "output price", context: "context window", checked: "price check date" };
+    const state = { benchmark: { key: "arena", direction: "desc" }, pricing: null };
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+    const safeUrl = (value) => {
+      try {
+        const url = new URL(value);
+        return url.protocol === "https:" ? escapeHtml(url.href) : "";
+      } catch { return ""; }
+    };
+    const link = (url, label) => {
+      const href = safeUrl(url);
+      return href ? `<a href="${href}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>` : "";
+    };
+    const validDate = (value) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
+    const dateText = (value) => validDate(value) ? new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" }).format(new Date(`${value}T00:00:00Z`)) : "—";
+    const shortDateText = (value) => validDate(value) ? new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "numeric", day: "numeric", year: "2-digit" }).format(new Date(`${value}T00:00:00Z`)) : "—";
+    const timeTag = (value) => validDate(value) ? `<time datetime="${escapeHtml(value)}" title="${dateText(value)}">${shortDateText(value)}</time>` : "—";
+    const sourceLink = (url, subject, seen) => {
+      const href = safeUrl(url);
+      return href ? `<a class="source-link" href="${href}" target="_blank" rel="noopener noreferrer" aria-label="Source for ${escapeHtml(subject)}, seen ${dateText(seen)}" title="Open source for ${escapeHtml(subject)}">source</a>` : "";
+    };
+    const hasNumber = (value) => typeof value === "number" && Number.isFinite(value) && value >= 0;
+    const score = (model, key) => {
+      const item = model.scores?.[key];
+      return item && hasNumber(item.value) && safeUrl(item.source) && validDate(item.seen) && (key !== "swePro" || item.harness) ? item : null;
+    };
+    const price = (model, key) => {
+      const item = model.pricing;
+      const source = key === "context" ? item?.contextSource || item?.source : item?.source;
+      return item && hasNumber(item[key]) && safeUrl(source) && validDate(item.checked) ? item[key] : null;
+    };
+    const formatContext = (tokens) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(tokens);
+    const formatPrice = (value) => `$${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(value)}`;
+    const colors = {};
+
+    function buildColorRanges() {
+      for (const key of benchmarkKeys) {
+        const values = SNAPSHOT.models.map((model) => score(model, key)?.value).filter((value) => value !== undefined);
+        colors[key] = values.length ? { min: Math.min(...values), max: Math.max(...values) } : null;
+      }
+    }
+
+    function heatStyle(key, value) {
+      const range = colors[key];
+      if (!range) return "";
+      const rank = range.max === range.min ? 1 : (value - range.min) / (range.max - range.min);
+      const hue = Math.round(5 + rank * 140);
+      return `style="--heat-bg:hsl(${hue} 48% ${Math.round(17 + rank * 11)}%);--heat-fg:#f2f8f3;--heat-edge:hsl(${hue} 66% ${Math.round(48 + rank * 15)}%)"`;
+    }
+
+    function sortedModels(group) {
+      const order = SNAPSHOT.models.map((model, index) => ({ model, index }));
+      const active = group === "pricing" ? state.pricing || state.benchmark : state.benchmark;
+      if (!active) return order.map(({ model }) => model);
+      const extract = group === "pricing" && state.pricing
+        ? (model) => active.key === "checked" ? (validDate(model.pricing?.checked) ? Date.parse(`${model.pricing.checked}T00:00:00Z`) : null) : price(model, active.key)
+        : (model) => score(model, active.key)?.value ?? null;
+      order.sort((a, b) => {
+        const av = extract(a.model), bv = extract(b.model);
+        if (av == null) return bv == null ? a.index - b.index : 1;
+        if (bv == null) return -1;
+        return (av - bv) * (active.direction === "asc" ? 1 : -1) || a.index - b.index;
+      });
+      return order.map(({ model }) => model);
+    }
+
+    function modelCell(model, includeChecked) {
+      return `<td class="model-cell" data-label="Model"><div class="provider">${escapeHtml(model.provider || "")}</div><div class="model-name" title="${escapeHtml(model.name || "Unnamed model")}">${escapeHtml(model.name || "Unnamed model")}</div>${includeChecked ? `<div class="model-checked">Scores checked ${timeTag(model.scoresChecked)}</div>` : ""}</td>`;
+    }
+
+    function scoreCell(model, key) {
+      const item = score(model, key);
+      if (!item) return `<td class="score-cell" data-label="${escapeHtml(benchmarkNames[key])}"><span class="missing" aria-label="No published score">—</span></td>`;
+      const display = item.display || String(item.value);
+      return `<td class="score-cell heat-cell" data-label="${escapeHtml(benchmarkNames[key])}" ${heatStyle(key, item.value)}><div class="value-line"><span class="cell-main">${escapeHtml(display)}</span>${sourceLink(item.source, `${model.name} ${benchmarkNames[key]} score`, item.seen)}</div><span class="cell-date">Seen ${timeTag(item.seen)}</span>${item.harness ? `<span class="harness" title="${escapeHtml(item.harness)}">${escapeHtml(item.harness)}</span>` : ""}</td>`;
+    }
+
+    function priceCell(model, key) {
+      const value = price(model, key);
+      const label = { input: "Input $ / 1M tokens", output: "Output $ / 1M tokens", context: "Context window" }[key];
+      if (value == null) return `<td class="price-cell" data-label="${label}"><span class="missing" aria-label="No published figure">—</span></td>`;
+      const item = model.pricing;
+      const source = key === "context" ? item.contextSource || item.source : item.source;
+      const display = key === "context" ? formatContext(value) : formatPrice(value);
+      return `<td class="price-cell" data-label="${label}"><div class="value-line"><span class="cell-main">${display}</span>${sourceLink(source, `${model.name} ${label}`, item.checked)}</div><span class="cell-date">Seen ${timeTag(item.checked)}</span></td>`;
+    }
+
+    function priceMeta(model) {
+      const item = model.pricing;
+      if (!item || !validDate(item.checked) || !safeUrl(item.source)) return `<td class="price-meta" data-label="Price last checked + sources"><span class="missing">—</span></td>`;
+      return `<td class="price-meta" data-label="Price last checked + sources"><div class="meta-links">${timeTag(item.checked)}${link(item.source, "Provider tariff")}${item.crossCheck ? link(item.crossCheck, "AA cross-check") : ""}</div>${item.tierNote ? `<span class="tariff-note" title="${escapeHtml(item.tierNote)}">${escapeHtml(item.tierNote)}</span>` : ""}</td>`;
+    }
+
+    function renderTableRows() {
+      const benchmarkBody = document.getElementById("benchmark-body");
+      const pricingBody = document.getElementById("pricing-body");
+      if (!SNAPSHOT.models.length) {
+        benchmarkBody.innerHTML = `<tr class="empty-row"><td colspan="7"><div class="empty-message"><span class="empty-title">No verified snapshot yet</span>Add published leaderboard scores with source links and dates to the data block in this file.</div></td></tr>`;
+        pricingBody.innerHTML = `<tr class="empty-row"><td colspan="5"><div class="empty-message"><span class="empty-title">No verified snapshot yet</span>Add published provider tariffs with source links and dates to the same model records.</div></td></tr>`;
+        return;
+      }
+      benchmarkBody.innerHTML = sortedModels("benchmark").map((model) => `<tr>${modelCell(model, true)}${benchmarkKeys.map((key) => scoreCell(model, key)).join("")}</tr>`).join("");
+      pricingBody.innerHTML = sortedModels("pricing").map((model) => `<tr>${modelCell(model, false)}${["input", "output", "context"].map((key) => priceCell(model, key)).join("")}${priceMeta(model)}</tr>`).join("");
+    }
+
+    function renderSortState() {
+      for (const button of document.querySelectorAll(".sort-button")) {
+        const active = state[button.dataset.group];
+        const selected = active?.key === button.dataset.key;
+        button.setAttribute("aria-pressed", selected ? "true" : "false");
+        button.closest("th").setAttribute("aria-sort", selected ? (active.direction === "asc" ? "ascending" : "descending") : "none");
+        button.querySelector(".sort-icon").textContent = selected ? (active.direction === "asc" ? "↑" : "↓") : "↕";
+      }
+      document.getElementById("benchmark-sort-label").textContent = state.benchmark ? `${benchmarkNames[state.benchmark.key]} · ${state.benchmark.direction === "asc" ? "low to high" : "high to low"}` : "Original model order";
+      document.getElementById("pricing-sort-label").textContent = state.pricing ? `${pricingNames[state.pricing.key]} · ${state.pricing.direction === "asc" ? "low to high" : "high to low"}` : "Matches benchmark order";
+      document.getElementById("sync-pricing").hidden = !state.pricing;
+    }
+
+    function render() { renderTableRows(); renderSortState(); }
+
+    document.getElementById("last-updated").textContent = validDate(SNAPSHOT.updated) ? dateText(SNAPSHOT.updated) : "—";
+    if (validDate(SNAPSHOT.updated)) document.getElementById("last-updated").setAttribute("datetime", SNAPSHOT.updated);
+    document.getElementById("model-count").textContent = SNAPSHOT.models.length ? `${SNAPSHOT.models.length} models` : "Models pending";
+    buildColorRanges();
+    render();
+
+    document.querySelectorAll(".sort-button").forEach((button) => button.addEventListener("click", () => {
+      const { group, key } = button.dataset;
+      const previous = state[group];
+      const firstDirection = group === "pricing" ? "asc" : "desc";
+      state[group] = { key, direction: previous?.key === key ? (previous.direction === "asc" ? "desc" : "asc") : firstDirection };
+      render();
+    }));
+    document.getElementById("sync-pricing").addEventListener("click", () => { state.pricing = null; render(); });
+  </script>
+</body>
+</html>
